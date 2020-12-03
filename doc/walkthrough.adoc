@@ -1,0 +1,124 @@
+= Walkthrough
+:imagesdir: ./resources
+
+== Installation
+
+Set the environment variables
+DEMO_DM_ADMIN_USR
+DEMO_DM_ADMIN_PWD
+to the Decision Manager admin credentials
+
+Set the enviornment variables
+DEMO_MAVEN_ID
+DEMO_MAVEN_URL
+DEMO_MAVEN_USR
+DEMO_MAVEN_PWD
+to the external Maven repository information
+
+Edit dc/etc/default.conf and replace the [...] fields with the required GitHub credentials.
+
+Run the install command for your system.
+
+You can follow the containers logs with
+
+[source,bash]
+----
+pod-logs $(dc/name)
+pod-logs $(ds/name)
+----
+
+Once Decision Central has completed start up you can login to it at http://localhost:30000/
+
+Deploy the post-commit script with
+
+[source,bash]
+----
+kubectl cp dc/etc/post-commit $(dc/name):/opt/kie/data/git/hooks
+----
+
+In order to deploy Decision Central artifacts to the externam Maven repository
+distribution management must be added to the pom.xml of a Decision Central project:
+
+[source,XML]
+----
+  <distributionManagement>
+    <repository>
+        <id>${env.MAVEN_REPO_ID}</id>
+        <url>${env.MAVEN_REPO_URL}</url>
+      <layout>default</layout>
+    </repository>
+  </distributionManagement>
+----
+
+In order to have this added automatically to a new project one can create the project from a
+suitable Maven archetype.
+
+Clone the Maven archetype and deploy to the external Maven repository
+
+[source,bash]
+----
+git clone git@github.com:mauriziocarioli/simple-dc-archetype.git
+cd simple-dc-archetype
+mvn clean deploy -DaltDeploymentRepository=$DEMO_MAVEN_ID::default::$DEMO_MAVEN_URL
+----
+
+Now follow these steps to add the archetype to Decision Central:
+
+Login to Decision Central and click on the wheel
+
+image::2020-12-03_14-21-58.png[]
+
+Click on Archetypes
+
+image::2020-12-03_14-23-57.png[]
+
+Click on Add Archetype
+
+image::2020-12-03_14-24-29.png[]
+
+Add the archetype information
+
+image::2020-12-03_14-26-35.png[]
+
+Now that you have added the archetype
+
+image::2020-12-03_14-30-39.png[]
+
+create a project on GitHub in the same account
+specified in the default.conf file.
+
+image::2020-12-03_14-33-32.png[]
+
+Now you are ready to create a decision project. Click on the projects link in the main page of Decision Central
+
+image::2020-12-03_14-40-07.png[]
+
+Click on My Space or create your own space
+
+image::2020-12-03_14-40-53.png[]
+
+Click on Add Project and then on Configure Advanced Options
+
+image::2020-12-03_14-47-47.png[]
+
+Check Based on template and enter the same project name as the one used to create the project in GitHub
+
+image::2020-12-03_15-01-31.png[]
+
+Now that the project has been created in Decision Central
+
+image::2020-12-03_15-02-41.png[]
+
+see that the initial project content has been committed to GitHub as well
+
+image::2020-12-03_15-24-49.png[]
+
+Next click on Deploy in the Decision Central project
+
+image::2020-12-03_15-25-40.png[]
+
+and see that the artifact built in Decision Central has been deployed to the external Maven repository
+
+image::2020-12-03_15-29-19.png[]
+
+link:../readme.adoc[Back to the Readme]

@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+minikube start --namespace rhdm --memory 4096 --cpus 4  --alsologtostderr -v=1 #--mount --mount-string="../pv:/data"

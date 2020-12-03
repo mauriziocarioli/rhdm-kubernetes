@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+echo $(kubectl get pods -o name --no-headers=true | grep decisionserver)

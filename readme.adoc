@@ -1,0 +1,55 @@
+= Red Hat Decision Manager on Kubernetes
+
+This project is a simple demo of Red Hat Decision Manager
+on Kubernetes.
+
+It demonstrates the following capabilities:
+
+* Decision Central authoring environment in a pod.
+* Automated commit of edited asset to GitHub using githooks.
+* Automated deployment of artifact to external Maven repository.
+* Decision Server (kie-server) execution environment in another pod.
+* Execution of artifact deployed to external Maven repository.
+
+== Requirements
+
+* Either Docker or podman.
+* Minikube.
+
+== Description of the project
+
+The project has several scripts to simplify development and debugging.
+
+* install-linux deployes Decision Manager to Minikube on Linux.
+* install-macos deployes Decision Manager to Minikube on Mac OS.
+* k8-start starts the Minikube cluster.
+* k8-stop stops the Minikube cluster.
+* k8-console ssh into the cluster node
+* get-pods get the pods in the cluster
+* nuke deletes the deployment
+
+Further scripts and configurations are in the directories:
+
+* dc - build and configure Decision Central image,
+* ds - build and configure Decision Server image.
+
+dc/Dockerfile and ds/Dockerfile are used to build custom images
+
+Useful commands in each directory are:
+
+* dc/name 
+  prints the Decision Central pod name,
+* pod-desc $(dc/name) 
+  prints the Decision Central pod description,
+* pod-console $(dc/name) 
+  ssh into the Decision Central container,
+* pod-shell $(dc/name) "command" 
+  executes command in the Decision Central container,
+* pod-log $(dc/name) 
+  prints the Decision Central log.
+
+The above works for the Decision Server replacing dc with ds.
+
+== Walkthough
+
+link:doc/walkthrough.adoc[Follow the walkthrough].

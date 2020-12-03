@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+minikube start --namespace rhdm --mount --mount-string="../pv:/data"  --alsologtostderr -v=2
+

@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+minikube start --namespace rhdm --memory 4096 --cpus 4 #--mount --mount-string="../pv:/data"
+eval $(minikube docker-env)
+cd dc
+podman build --tag rhdm-decisioncentral:1 .
+cd ../ds
+build --tag rhdm-decisionserver:1 .
+podman build --tag rhdm-decisionserver:1
+cd ..
+kubectl create -f rhdm.json
+kubectl create secret generic decisioncentral-secret \
+	--from-literal=KIE_ADMIN_USER=${DEMO_DM_ADMIN_USR} \
+	--from-literal=KIE_ADMIN_PWD=${DEMO_DM_ADMIN_PWD}
+kubectl create secret generic maven-secret \
+	--from-literal=MAVEN_REPO_ID=${DEMO_MAVEN_ID} \
+	--from-literal=MAVEN_REPO_URL=${DEMO_MAVEN_URL} \
+	--from-literal=MAVEN_REPO_USERNAME=${DEMO_MAVEN_USR} \
+	--from-literal=MAVEN_REPO_PASSWORD=${DEMO_MAVEN_PWD}
+kubectl create -f decisioncentral.yaml 
+sleep 30
+dcpodname=$(kubectl get pods -o name --no-headers | grep decisioncentral)
+kubectl get pods
+kubectl exec $dcpodname -- mkdir -p /opt/kie/data/git/hooks
+kubectl cp dcpodname:/opt/kie/data/git/hooks
+kubectl get pods
+echo "minikube ip"
+minikube ip
+

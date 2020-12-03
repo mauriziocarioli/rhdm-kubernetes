@@ -1,0 +1,4 @@
+kubectl delete service decisioncentral
+kubectl delete deployment decisioncentral
+kubectl delete persistentvolume/decisioncentral-pv
+kubectl delete persistentvolumeclaim/decisioncentral-pvc

@@ -1,0 +1,209 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: decisioncentral-pvc
+  namespace: rhdm
+spec:
+  accessModes:
+    - ReadWriteOnce
+  volumeName: decisioncentral-pv
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: decisioncentral-pv
+  namespace: rhdm
+spec:
+  hostPath: 
+    path: /data
+    type: DirectoryOrCreate
+  accessModes:
+    - ReadWriteOnce
+  capacity:
+    storage: 1Gi
+  storageClassName: manual
+  claimRef:
+    name: decisioncentral-pvc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: decisioncentral
+  namespace: rhdm
+  labels:
+    app: decisioncentral
+    environment: demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: decisioncentral
+  template:
+    metadata:
+      labels:
+        app: decisioncentral
+    spec:
+      volumes:
+        - name: decisioncentral-pv
+          hostPath:
+            path: /data
+            type: DirectoryOrCreate
+      containers:
+        - name: decisioncentral
+          image: rhdm-decisioncentral:1
+          ports:
+            - containerPort: 8080
+          resources:
+            limits:
+              memory: 3Gi
+              cpu: 1000m
+          volumeMounts:
+            - name: decisioncentral-pv
+              mountPath: /opt/kie/data
+          env:
+            - name: DECISION_CENTRAL_MEMORY_LIMIT
+              value: 3Gi
+            - name: DECISION_CENTRAL_VOLUME_CAPACITY
+              value: 1Gi
+            - name: GIT_HOOKS_DIR
+              value: /opt/kie/data/git/hooks
+            - name: KIE_ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                  name: decision-secret
+                  key: KIE_ADMIN_USER
+            - name: KIE_ADMIN_PWD
+              valueFrom:
+                secretKeyRef:
+                  name: decision-secret
+                  key: KIE_ADMIN_PWD
+            - name: MAVEN_REPO_ID
+              valueFrom:
+                secretKeyRef:
+                  name: maven-secret
+                  key: MAVEN_REPO_ID
+            - name: MAVEN_REPO_URL
+              valueFrom:
+                secretKeyRef:
+                  name: maven-secret
+                  key: MAVEN_REPO_URL
+            - name: MAVEN_REPO_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: maven-secret
+                  key: MAVEN_REPO_USERNAME
+            - name: MAVEN_REPO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: maven-secret
+                  key: MAVEN_REPO_PASSWORD
+          securityContext:
+            runAsUser: 0
+          command: ["/opt/eap/bin/openshift-launch.sh"]
+          args: ["-c","standalone-openshift.xml","-b","0.0.0.0"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: decisioncentral
+  namespace: rhdm
+spec:
+  selector:
+    app: decisioncentral
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+      nodePort: 30000
+  type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: decisionserver
+  namespace: rhdm
+  labels:
+    app: decisionserver
+    environment: demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: decisionserver
+  template:
+    metadata:
+      labels:
+        app: decisionserver
+    spec:
+      containers:
+        - name: decisionserver
+          image: rhdm-decisionserver:1
+          ports:
+            - containerPort: 8080
+          resources:
+            limits:
+              memory: 1Gi
+              cpu: 2000m
+          env:
+            - name: KIE_SERVER_ID
+              value: demo-kieserver
+            - name: KIE_SERVER_MEMORY_LIMIT
+              value: 1Gi
+            - name: KIE_SERVER_MODE
+              value: "DEVELOPMENT"
+            - name: KIE_SERVER_CONTROLLER_SERVICE
+              value: decisioncentral
+            - name: KIE_SERVER_CONTROLLER_PROTOCOL
+              value: "ws"
+            - name: KIE_ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                  name: decision-secret
+                  key: KIE_ADMIN_USER
+            - name: KIE_ADMIN_PWD
+              valueFrom:
+                secretKeyRef:
+                  name: decision-secret
+                  key: KIE_ADMIN_PWD
+            - name: MAVEN_REPO_ID
+              valueFrom:
+                secretKeyRef:
+                  name: maven-secret
+                  key: MAVEN_REPO_ID
+            - name: MAVEN_REPO_URL
+              valueFrom:
+                secretKeyRef:
+                  name: maven-secret
+                  key: MAVEN_REPO_URL
+            - name: MAVEN_REPO_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: maven-secret
+                  key: MAVEN_REPO_USERNAME
+            - name: MAVEN_REPO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: maven-secret
+                  key: MAVEN_REPO_PASSWORD
+          securityContext:
+            runAsUser: 0
+          command: ["/opt/eap/bin/openshift-launch.sh"]
+          args: ["-c","standalone-openshift.xml","-b","0.0.0.0"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: decisionserver
+  namespace: rhdm
+spec:
+  selector:
+    app: decisionserver
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+      nodePort: 30001
+  type: LoadBalancer

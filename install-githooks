@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+kubectl cp etc/post-commit $(kubectl get pods -o name --no-headers):/opt/kie/data/git/hooks

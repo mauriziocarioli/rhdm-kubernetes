@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+kubectl describe pod decisioncentral-$1 | grep Node\:
+
